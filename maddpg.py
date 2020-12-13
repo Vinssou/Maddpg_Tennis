@@ -120,14 +120,17 @@ class MaddpgAgent:
         """
         states, actions, rewards, next_states, dones = experiences
 
-        next_states = np.swapaxes(next_states, 0, 1)
-        rewards = np.swapaxes(rewards, 0, 1)
-        dones = np.swapaxes(dones, 0, 1)
-
+        
+        
+        all_next_states = np.reshape(next_states, (BATCH_SIZE, self.agent_count * self.state_size))
         all_states = np.reshape(states, (BATCH_SIZE, self.agent_count * self.state_size))
         all_actions = np.reshape(actions, (BATCH_SIZE, self.agent_count * self.action_size))
 
+        next_states = np.swapaxes(next_states, 0, 1)
         states = np.swapaxes(states, 0, 1)
+        rewards = np.swapaxes(rewards, 0, 1)
+        dones = np.swapaxes(dones, 0, 1)
+
 
         # print("rewards.shape: ", rewards.shape)
         # print("states.shape: ", states.shape)
@@ -137,8 +140,7 @@ class MaddpgAgent:
         # ---------------------------- update critic ---------------------------- #
         # Get predicted next-state actions and Q values from target models
         actions_next = self.target_act(next_states)
-        next_states = torch.reshape(next_states, (BATCH_SIZE, self.agent_count * self.state_size))
-        Q_targets_next = self.agents[agent_index].critic_target(next_states, actions_next)
+        Q_targets_next = self.agents[agent_index].critic_target(all_next_states, actions_next)
         
         # Compute Q targets for current states (y_i)
         Q_targets = rewards[agent_index] + (gamma * Q_targets_next * (1 - dones[agent_index]))
