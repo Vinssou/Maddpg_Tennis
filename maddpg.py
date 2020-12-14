@@ -83,7 +83,7 @@ class MaddpgAgent:
             state = torch.unsqueeze(state, 0) 
             self.agents[idx].actor_local.eval()
             with torch.no_grad():
-                action = self.agents[0].actor_local(state).cpu().data.numpy()
+                action = self.agents[idx].actor_local(state).cpu().data.numpy()
             self.agents[idx].actor_local.train()
             if add_noise:
                 noise = self.exploration * self.noise.sample()
