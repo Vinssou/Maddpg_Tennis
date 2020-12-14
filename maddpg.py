@@ -13,9 +13,9 @@ BUFFER_SIZE = 100000    # replay buffer size
 BATCH_SIZE = 128        # minibatch size
 GAMMA = 0.95            # discount factor
 
-EXPLORATION_DECAY = 0.9999995
+EXPLORATION_DECAY = 0.999995
 EXPLORATION_MIN = 0.01
-LEARN_FREQUENCY = 20 # *20
+LEARN_FREQUENCY = 20
 LEARN_COUNT = 10
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -63,12 +63,10 @@ class MaddpgAgent:
             state = state.unsqueeze(0)
             self.agents[idx].actor_local.eval()
             with torch.no_grad():
-                # print(idx, "  state: ", state)
                 action = self.agents[idx].actor_local(state).cpu().data.numpy()
             self.agents[idx].actor_local.train()
             if add_noise:
                 noise = self.exploration * self.noise.sample()
-                # print(action, " Action + Noise ", noise, " = ",action + noise)
                 action += noise
                 self.exploration *= EXPLORATION_DECAY
                 self.exploration = max(EXPLORATION_MIN, self.exploration)
@@ -132,33 +130,20 @@ class MaddpgAgent:
         rewards = np.swapaxes(rewards, 0, 1)
         dones = np.swapaxes(dones, 0, 1)
 
-
-        # print("rewards.shape: ", rewards.shape)
-        # print("states.shape: ", states.shape)
-
-        # print("all_states.shape: ", all_states.shape)
-
         # ---------------------------- update critic ---------------------------- #
         # Get predicted next-state actions and Q values from target models
         actions_next = self.target_act(next_states)
-        # print("actions_next.shape: ", actions_next.shape)
         with torch.no_grad():
             Q_targets_next = self.agents[agent_index].critic_target(all_next_states, actions_next)
         Q_targets_next.squeeze_()
         # Compute Q targets for current states (y_i)
-        # print("Q_targets_next.shape: ", Q_targets_next.shape)
-        # print("rewards[agent_index].shape ", rewards[agent_index].shape)
-        # print("dones[agent_index].shape ", dones[agent_index].shape)
         Q_targets = rewards[agent_index] + (gamma * Q_targets_next * (1 - dones[agent_index]))
+
         # Compute critic loss
-        
         Q_expected = self.agents[agent_index].critic_local(all_states, all_actions)
         Q_expected.squeeze_()
-        # print("Q_expected: ", Q_expected.shape)
-        # print("Q_targets: ", Q_targets.shape)
 
         critic_loss = F.mse_loss(Q_expected, Q_targets)
-        # critic_loss = F.huber_loss(Q_expected, Q_targets)
         # Minimize the loss
         self.agents[agent_index].critic_optimizer.zero_grad()
         critic_loss.backward()
@@ -169,7 +154,6 @@ class MaddpgAgent:
         # Compute actor loss
         actions_pred = self.local_act(states)
         actor_loss = -self.agents[agent_index].critic_local(all_states, actions_pred).mean()
-        # print("actor_loss: ", actor_loss)
         # Minimize the loss
         self.agents[agent_index].actor_optimizer.zero_grad()
         actor_loss.backward()
@@ -205,7 +189,6 @@ class OUNoise:
     def sample(self):
         """Update internal state and return it as a noise sample."""
         x = self.state
-        # dx = self.theta * (self.mu - x) + self.sigma * np.array([random.random() for i in range(len(x))])
         dx = self.theta * (self.mu - x) + self.sigma * np.random.randn(len(x))
         self.state = x + dx
         return self.state
