@@ -12,10 +12,6 @@ import torch.optim as optim
 BUFFER_SIZE = 100000    # replay buffer size
 BATCH_SIZE = 256        # minibatch size
 GAMMA = 0.99            # discount factor
-TAU = 1e-3              # for soft update of target parameters
-LR_ACTOR = 1e-3         # learning rate of the actor 
-LR_CRITIC = 1e-3        # learning rate of the critic
-WEIGHT_DECAY = 0.0      # L2 weight decay
 
 EXPLORATION_DECAY = 0.999999
 EXPLORATION_MIN = 0.01
@@ -45,7 +41,6 @@ class MaddpgAgent:
         self.setp_count = 0
 
 
-
     def step(self, state, action, reward, next_state, done):
         """Save experience in replay memory, and use random sample from buffer to learn."""
         # Save experience / reward
@@ -65,6 +60,7 @@ class MaddpgAgent:
         actions = []
         for idx, state in enumerate(states):
             state = torch.from_numpy(state).float().to(device)
+            state = state.unsqueeze(0)
             self.agents[idx].actor_local.eval()
             with torch.no_grad():
                 action = self.agents[idx].actor_local(state).cpu().data.numpy()
@@ -77,6 +73,7 @@ class MaddpgAgent:
             actions.append(action)
 
         actions = np.array(actions)
+        actions = actions.squeeze()
         return actions
 
     def target_act(self, states):

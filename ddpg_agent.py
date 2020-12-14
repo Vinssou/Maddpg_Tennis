@@ -9,18 +9,10 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 
-BUFFER_SIZE = 100000    # replay buffer size
-BATCH_SIZE = 256        # minibatch size
-GAMMA = 0.99            # discount factor
 TAU = 1e-3              # for soft update of target parameters
 LR_ACTOR = 1e-3         # learning rate of the actor 
 LR_CRITIC = 1e-3        # learning rate of the critic
 WEIGHT_DECAY = 0.0      # L2 weight decay
-
-EXPLORATION_DECAY = 0.999999
-EXPLORATION_MIN = 0.01
-LEARN_FREQUENCY = 20*20
-LEARN_COUNT = 10
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -47,15 +39,6 @@ class Agent():
         self.critic_local = Critic(agent_count * state_size, agent_count * action_size, random_seed).to(device)
         self.critic_target = Critic(agent_count * state_size, agent_count * action_size, random_seed).to(device)
         self.critic_optimizer = optim.Adam(self.critic_local.parameters(), lr=LR_CRITIC, weight_decay=WEIGHT_DECAY)
-
-        # # Noise process
-        # self.noise = OUNoise(action_size, random_seed)
-        # self.exploration = 1.0
-
-        # # Replay memory
-        # self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, random_seed)
-
-        # self.setp_count = 0
     
     def soft_update(self):
         self.soft_update_network(self.critic_local, self.critic_target, TAU)
