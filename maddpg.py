@@ -15,7 +15,7 @@ GAMMA = 0.99            # discount factor
 
 EXPLORATION_DECAY = 0.999999
 EXPLORATION_MIN = 0.01
-LEARN_FREQUENCY = 20*20
+LEARN_FREQUENCY = 20 # 20*20
 LEARN_COUNT = 10
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -28,6 +28,8 @@ class MaddpgAgent:
         self.state_size = state_size
         self.agent_count = agent_count
         self.agents = [Agent(agent_count, state_size, action_size, random_seed) for _ in range(agent_count) ]
+        # agent = Agent(agent_count, state_size, action_size, random_seed)
+        # self.agents = [ agent for _ in range(agent_count) ]
 
         random.seed(random_seed)
 
@@ -51,19 +53,37 @@ class MaddpgAgent:
         # Learn, if enough samples are available in memory
         if len(self.memory) > BATCH_SIZE and self.setp_count % LEARN_FREQUENCY == 0:
             for _ in range(LEARN_COUNT):
-                for idx in range(len(self.agents)):
+                for idx in range(self.agent_count):
                     experiences = self.memory.sample()
                     self.learn(idx, experiences, GAMMA)
 
     def act(self, states, add_noise=True):
         """Returns actions for given state as per current policy."""
+        idx = 0
+        state = states
+        state = torch.from_numpy(state).float().to(device)
+        self.agents[idx].actor_local.eval()
+        with torch.no_grad():
+            action = self.agents[idx].actor_local(state).cpu().data.numpy()
+        self.agents[idx].actor_local.train()
+        if add_noise:
+            noise = self.exploration * self.noise.sample()
+            action += noise
+            self.exploration *= EXPLORATION_DECAY
+            self.exploration = max(EXPLORATION_MIN, self.exploration)
+    
+        return np.clip(action, -1, 1)
+
+
+    def act2(self, states, add_noise=True):
+        """Returns actions for given state as per current policy."""
         actions = []
         for idx, state in enumerate(states):
             state = torch.from_numpy(state).float().to(device)
-            state = state.unsqueeze(0)
+            state = torch.unsqueeze(state, 0) 
             self.agents[idx].actor_local.eval()
             with torch.no_grad():
-                action = self.agents[idx].actor_local(state).cpu().data.numpy()
+                action = self.agents[0].actor_local(state).cpu().data.numpy()
             self.agents[idx].actor_local.train()
             if add_noise:
                 noise = self.exploration * self.noise.sample()
@@ -74,30 +94,35 @@ class MaddpgAgent:
 
         actions = np.array(actions)
         actions = actions.squeeze()
-        return actions
+        return np.clip(actions, -1, 1)
 
     def target_act(self, states):
         """Returns actions for given state as per current policy."""
         actions = torch.tensor([])
+        assert len(states) == self.agent_count
         for idx, state in enumerate(states):
             state = torch.reshape(state, (BATCH_SIZE, self.state_size))
             action = self.agents[idx].actor_target(state)
+            # print(idx, "  action  ", action.shape)
             actions = torch.cat((actions, action))
+        # print("actions  ", actions.shape)
         actions = torch.reshape(actions, (self.agent_count, BATCH_SIZE, self.action_size))
-        actions = actions.permute(1, 0, 2)
-        actions = torch.reshape(actions, (BATCH_SIZE, self.agent_count * self.action_size))
+        # print(" AFF actions  ", actions.shape)
+        # actions = actions.permute(1, 0, 2)
+        # actions = torch.reshape(actions, (BATCH_SIZE, self.agent_count * self.action_size))
         return actions
 
 
     def local_act(self, states):
         actions = torch.tensor([])
+        assert len(states) == self.agent_count
         for idx, state in enumerate(states):
             state = torch.reshape(state, (BATCH_SIZE, self.state_size))
             action = self.agents[idx].actor_local(state)
             actions = torch.cat((actions, action))
         actions = torch.reshape(actions, (self.agent_count, BATCH_SIZE, self.action_size))
-        actions = actions.permute(1, 0, 2)
-        actions = torch.reshape(actions, (BATCH_SIZE, self.agent_count * self.action_size))
+        # actions = actions.permute(1, 0, 2)
+        # actions = torch.reshape(actions, (BATCH_SIZE, self.agent_count * self.action_size))
         return actions
 
     def reset(self):
@@ -119,31 +144,47 @@ class MaddpgAgent:
 
         
         
-        all_next_states = np.reshape(next_states, (BATCH_SIZE, self.agent_count * self.state_size))
-        all_states = np.reshape(states, (BATCH_SIZE, self.agent_count * self.state_size))
-        all_actions = np.reshape(actions, (BATCH_SIZE, self.agent_count * self.action_size))
-
-        next_states = np.swapaxes(next_states, 0, 1)
-        states = np.swapaxes(states, 0, 1)
-        rewards = np.swapaxes(rewards, 0, 1)
-        dones = np.swapaxes(dones, 0, 1)
-
+        # all_next_states = np.reshape(next_states, (BATCH_SIZE, self.agent_count * self.state_size))
+        # all_states = np.reshape(states, (BATCH_SIZE, self.agent_count * self.state_size))
+        # all_actions = np.reshape(actions, (BATCH_SIZE, self.agent_count * self.action_size))
 
         # print("rewards.shape: ", rewards.shape)
         # print("states.shape: ", states.shape)
+        # print("actions.shape: ", actions.shape)
 
-        # print("all_states.shape: ", all_states.shape)
+        # print("rewards: ", rewards)
+        # print("states: ", states)
+        # print("actions: ", actions)
+
+        next_states = np.swapaxes(next_states, 0, 1)
+        states = np.swapaxes(states, 0, 1)
+        actions = np.swapaxes(actions, 0, 1)
+        rewards = np.swapaxes(rewards, 0, 1)
+        dones = np.swapaxes(dones, 0, 1)
+
+        # print("######################  THEN  ##########")
+        # print("rewards.shape: ", rewards.shape)
+        # print("states.shape: ", states.shape)
+        # print("actions.shape: ", actions.shape)
+
+        # print("rewards: ", rewards)
+        # print("states: ", states)
+        # print("actions: ", actions)
+
 
         # ---------------------------- update critic ---------------------------- #
         # Get predicted next-state actions and Q values from target models
-        actions_next = self.target_act(next_states)
-        Q_targets_next = self.agents[agent_index].critic_target(all_next_states, actions_next)
+        # actions_next = self.target_act(next_states)
+        actions_next = self.agents[agent_index].actor_target(next_states[agent_index])
+
+        # print("action next : ", actions_next[agent_index].shape)
+        Q_targets_next = self.agents[agent_index].critic_target(next_states[agent_index], actions_next) # all_next_states # [agent_index]
         
         # Compute Q targets for current states (y_i)
         Q_targets = rewards[agent_index] + (gamma * Q_targets_next * (1 - dones[agent_index]))
         # Compute critic loss
         
-        Q_expected = self.agents[agent_index].critic_local(all_states, all_actions)
+        Q_expected = self.agents[agent_index].critic_local(states[agent_index], actions[agent_index]) # all_states, all_actions
         critic_loss = F.mse_loss(Q_expected, Q_targets)
         # Minimize the loss
         self.agents[agent_index].critic_optimizer.zero_grad()
@@ -153,8 +194,9 @@ class MaddpgAgent:
 
         # ---------------------------- update actor ---------------------------- #
         # Compute actor loss
-        actions_pred = self.local_act(states)
-        actor_loss = -self.agents[agent_index].critic_local(all_states, actions_pred).mean()
+        # actions_pred = self.local_act(states)
+        actions_pred = self.agents[agent_index].actor_local(states[agent_index])
+        actor_loss = -self.agents[agent_index].critic_local(states[agent_index], actions_pred).mean() # all_states # [agent_index]
         # Minimize the loss
         self.agents[agent_index].actor_optimizer.zero_grad()
         actor_loss.backward()
