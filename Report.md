@@ -42,7 +42,7 @@ The [Jupyter notebook](https://github.com/Vinssou/Tennis/blob/master/Tennis.ipyn
  
 How we can see the two players have the same style of play. This is normal because it is the same agent which is actually playing.
  
-![Result] (https://github.com/Vinssou/Tennis/blob/master/tennis.gif)
+![Result](https://github.com/Vinssou/Tennis/blob/master/tennis.gif)
  
 This environment has been solved in 26189 episodes.
 ![Progress](https://github.com/Vinssou/Tennis/blob/master/ddpg.png)
@@ -87,7 +87,8 @@ I increase the learning frequency, decreasing the learning rate of both actor an
  
 ### Results
 Compared to the previous animation, we can see the two players are playing differently. They are using different agents even if both use shared data for the critic.
-![Result] (tennis.gif)
+
+![Result](tennis.gif)
  
 This environment has been solved in 8656 episodes.
 ![Progress](maddpg.png)
