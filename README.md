@@ -19,7 +19,7 @@ The task is episodic, and in order to solve the environment, your agents must ge
 The environment is considered solved, when the average (over 100 episodes) of those **scores** is at least +0.5.
 
 ## Solving the Environment
-This project support both provided environments. The DDPG is used to solve this environment. This algorithm is a modified version from Udacity course. The environment will be solved faster using the second environment version described bellow. To solve the environment clone this repository, and run all cells of  [this jupyter notebook](https://github.com/Vinssou/Maddpg_Tennis/blob/master/Tennis.ipynb)
+The MADDPG is used to solve this environment. To solve the environment clone this repository, and run all cells of  [this jupyter notebook](https://github.com/Vinssou/Maddpg_Tennis/blob/master/Tennis.ipynb)
 
 ## Watch the agent
 To simply watch the agent, run the cells one by one of  [this jupyter notebook](https://github.com/Vinssou/Maddpg_Tennis/blob/master/Tennis.ipynb) but not the one that train the agent. Then the agent will load the weights and you could watch the result of the DDPG agent. 
