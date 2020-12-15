@@ -38,7 +38,7 @@ LEARN_COUNT = 10
 ```
  
 ### Results
-The ![Jupyter notebook](https://github.com/Vinssou/Tennis/blob/master/Tennis.ipynb) is available there.
+The [Jupyter notebook](https://github.com/Vinssou/Tennis/blob/master/Tennis.ipynb) is available there.
  
 How we can see the two players have the same style of play. This is normal because it is the same agent which is actually playing.
  
@@ -53,7 +53,7 @@ The implemented DDPG algorithm seemed quite robust, without any tuning the Tenni
 ## MADDPG
  
 ### Approach
-I wanted to try to implement the ![Multi Agent Deep Deterministic Policy Gradient](https://arxiv.org/pdf/1706.02275.pdf). In the DDPG approach I used only one agent so I was pretty sure I couldn't get a better result with MADDPG. If I had used two different agents in the DDPG solution I could have thought MADDPG could be better. But here I was feeling this won't do a fair comparison.
+I wanted to try to implement the [Multi Agent Deep Deterministic Policy Gradient](https://arxiv.org/pdf/1706.02275.pdf). In the DDPG approach I used only one agent so I was pretty sure I couldn't get a better result with MADDPG. If I had used two different agents in the DDPG solution I could have thought MADDPG could be better. But here I was feeling this won't do a fair comparison.
  
 ### Architecture
 To implement MADDPG I started from my DDPG code, and changed the program architecture.
@@ -62,7 +62,7 @@ To implement MADDPG I started from my DDPG code, and changed the program archite
 I modified the Critic network. Instead of having one action, and one state, it has n actions and n states, n being the number of agents.
  
 #### MADDPG class
-I created a new class MADDPG which contains all the DDPG agents. The MADDPG has also a replay buffer to store the agents experience and a ![Ornstein-Uhlenbeck process](https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process) to add some noise. 
+I created a new class MADDPG which contains all the DDPG agents. The MADDPG has also a replay buffer to store the agents experience and a [Ornstein-Uhlenbeck process](https://en.wikipedia.org/wiki/Ornstein%E2%80%93Uhlenbeck_process) to add some noise. 
  
 ### Hyperparameters
 By using the same hyperparameters I solved MADDPG in around 10000 episodes. Much faster than using DDPG. I was really surprised by these results. Then I started to tune them and managed to solve it in 8656 episodes.
@@ -98,12 +98,12 @@ MADDPG was surprisingly good in this multi agent environment. I managed to decre
 ## Future Work
  
 ### Improvement
-An improvement could be to use the D3QN for the critic and use the Prioritized Replay Buffer. I implemented both ![there](https://github.com/Vinssou/Banana/blob/master/Navigation.ipynb) so I could plug them to see if they can reduce the number of episodes to solve this environment.
+An improvement could be to use the D3QN for the critic and use the Prioritized Replay Buffer. I implemented both [there](https://github.com/Vinssou/Banana/blob/master/Navigation.ipynb) so I could plug them to see if they can reduce the number of episodes to solve this environment.
  
 ### Using Unity
-In this environment we have only two agents and they are collaborating. Some additional experiences could be used for competitive agents and collaborative one in the same environment. I adapted this MAD DOG to work in discrete space in the ![Soccer environment](https://github.com/Vinssou/Soccer/blob/master/Soccer.ipynb). In this environment we can find the collaboration and the competition. The additional challenge in this environment it is that the action space of the various agent don't have the same space. So it is not so easy to adapt but still feasible. The first approach I am using is having two MADDPG agents, for each type.
+In this environment we have only two agents and they are collaborating. Some additional experiences could be used for competitive agents and collaborative one in the same environment. I adapted this MAD DOG to work in discrete space in the [Soccer environment](https://github.com/Vinssou/Soccer/blob/master/Soccer.ipynb). In this environment we can find the collaboration and the competition. The additional challenge in this environment it is that the action space of the various agent don't have the same space. So it is not so easy to adapt but still feasible. The first approach I am using is having two MADDPG agents, for each type.
  
 ### Using Cogment
-I am currently working at ![Air](https://ai-r.com/) on ![Cogment framework](https://cogment.ai/) a high-efficiency, open source framework designed to enable the training of models in environments where humans and agents interact with the environment and each other continuously. It’s capable of distributed, multi-agent, multi-model training. So I will continue to implement agents in a multi-agent environment.
+I am currently working at [Air](https://ai-r.com/) on [Cogment framework](https://cogment.ai/) a high-efficiency, open source framework designed to enable the training of models in environments where humans and agents interact with the environment and each other continuously. It’s capable of distributed, multi-agent, multi-model training. So I will continue to implement agents in a multi-agent environment.
  
 
